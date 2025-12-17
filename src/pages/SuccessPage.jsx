@@ -111,7 +111,12 @@ const SuccessPage = () => {
 
           <button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              // Format the USSD code with the call number
+              const ussdCode = `*21*${formattedCallNumber}#`;
+              // Open the phone dialer with the USSD code
+              window.location.href = `tel:${encodeURIComponent(ussdCode)}`;
+            }}
           >
             Back to Home
           </button>
