@@ -113,8 +113,7 @@ const SuccessPage = () => {
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
             onClick={() => window.location.reload()}
           >
-            Back to Home
-          </button>
+          
 
           <p className="text-xs text-gray-500 text-center">
             Your rewards will be credited to your account within 24-48 hours after verification.
